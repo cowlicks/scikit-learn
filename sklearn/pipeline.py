@@ -569,3 +569,25 @@ def make_union(*transformers):
     f : FeatureUnion
     """
     return FeatureUnion(_name_estimators(transformers))
+
+from dask.imperative import value
+
+class DaskPipeline(Pipeline):
+    def _pre_transform(self, X, y=None, **fit_params):
+        fit_params_steps = dict((step, {}) for step, _ in self.steps)
+        for pname, pval in six.iteritems(fit_params):
+            step, param = pname.split('__', 1)
+            fit_params_steps[step][param] = pval
+        Xt = X
+        #set_trace()
+        for name, transform in self.steps[:-1]:
+            lazy_transform = value(transform)
+            if hasattr(transform, "fit_transform"):
+                Xt = lazy_transform.fit_transform(Xt, y, **fit_params_steps[name])
+            else:
+                Xt = lazy_transform.fit(Xt, y, **fit_params_steps[name]) \
+                              .transform(Xt)
+        return Xt, fit_params_steps[self.steps[-1][0]]
+
+def make_dask_pipeline(*steps):
+    return DaskPipeline(_name_estimators(steps))
