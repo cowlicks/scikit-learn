@@ -1273,6 +1273,8 @@ def _fit_and_score(estimator, X, y, scorer, train, test, verbose,
     parameters : dict or None, optional
         The parameters that have been evaluated.
     """
+    from ipdb import set_trace
+    set_trace()
     if verbose > 1:
         if parameters is None:
             msg = "no parameters to be set"

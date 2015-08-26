@@ -21,6 +21,8 @@ from .utils import tosequence
 from .utils.metaestimators import if_delegate_has_method
 from .externals.six import iteritems
 
+from ipdb import set_trace
+
 __all__ = ['Pipeline', 'FeatureUnion']
 
 
@@ -139,6 +141,7 @@ class Pipeline(BaseEstimator):
             step, param = pname.split('__', 1)
             fit_params_steps[step][param] = pval
         Xt = X
+        #set_trace()
         for name, transform in self.steps[:-1]:
             if hasattr(transform, "fit_transform"):
                 Xt = transform.fit_transform(Xt, y, **fit_params_steps[name])
@@ -160,6 +163,7 @@ class Pipeline(BaseEstimator):
             Training targets. Must fulfill label requirements for all steps of
             the pipeline.
         """
+        #set_trace()
         Xt, fit_params = self._pre_transform(X, y, **fit_params)
         self.steps[-1][-1].fit(Xt, y, **fit_params)
         return self

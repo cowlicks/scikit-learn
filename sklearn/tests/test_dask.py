@@ -2,6 +2,7 @@ import numpy as np
 from numpy.testing import assert_array_almost_equal
 from dask.imperative import value
 from sklearn.svm import LinearSVC
+from sklearn.grid_search import GridSearchCV
 from sklearn.pipeline import make_pipeline, make_dask_pipeline
 from sklearn.datasets import load_iris
 from sklearn.preprocessing import StandardScaler
@@ -19,16 +20,26 @@ def eq(a, b):
 
 
 def test_dask_gridsearch():
-    pass
+    #LinearSVC().fit(iris.data, iris.target, C=666)
+    ests = (StandardScaler(), LinearSVC())
+    params = {'linearsvc__C': np.logspace(-3, 3)}
+
+    exp = GridSearchCV(
+            make_pipeline(StandardScaler(), LinearSVC()),
+            param_grid=params
+            ).fit(iris.data, iris.target)
+    res = dask_grid_search(ests, params, iris.data, iris.target)
+
+    assert_array_almost_equal(res, exp)
 
 
 def test_simple_pipe_fit():
     ests = (StandardScaler(), LinearSVC())
     res = simple_pipe_fit(ests, {}, iris.data, iris.target)
-    exp = LinearSVC().fit_transform(
+    exp = LinearSVC().fit(
             StandardScaler().fit_transform(iris.data, iris.target),
             iris.target)
-    assert_array_almost_equal(res.compute(), exp)
+    eq(res.compute(), exp)
 
 
 def test_fit_transform():
@@ -39,3 +50,11 @@ def test_fit_transform():
     a = fit_transform(LinearSVC(), iris.data, iris.target)
     b = LinearSVC().fit_transform(iris.data, iris.target)
     assert_array_almost_equal(a, b)
+
+
+def test_amueller():
+    param_grid = {'linearsvc__C': np.logspace(-3, 3)}
+    #pipe = make_pipeline(StandardScaler(), LinearSVC())
+    grid = GridSearchCV(make_pipeline(StandardScaler(), LinearSVC()), param_grid=param_grid)
+    grid.fit(iris.data, iris.target)
+
